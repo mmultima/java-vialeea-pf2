@@ -26,12 +26,13 @@ jobs:
           cd Application
           chmod +x gradlew
           ./gradlew build test bootwar
+          cp build/libs/ROOT.war build/libs/app.jar
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           name: java-app
-          path: '${{ github.workspace }}/Application/build/libs/ROOT.war'
+          path: '${{ github.workspace }}/Application/build/libs/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -53,4 +54,4 @@ jobs:
           app-name: 'vialeea-test'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FBDBE52D0C4D4D55AC965D63AE77E637 }}
-          package: '*.war'
+          package: '*.jar'
