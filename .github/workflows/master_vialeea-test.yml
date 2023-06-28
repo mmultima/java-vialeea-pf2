@@ -1,147 +1,56 @@
-name: Build and Deploy java spring app to azure
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy JAR app to Azure Web App - vialeea-test
+
 on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
-
-env:
-  AZURE_WEBAPP_NAME: "vialeea-test"    # set this to your application's name
-  AZURE_WEBAPP_PACKAGE_PATH: "Application/build"      # set this to the path to your web app project, defaults to the repository root
-  JAVA_VERSION: '1.8'             # set this to the java version to use
-  RESOURCEGROUPNAME: "Vialeea"
-  LOCATION: "North Europe"
-  HOSTINGPLANNAME: "ASP-Vialeea-888f"
-  APPINSIGHTLOCATION: "North Europe"
-  SKU: "P1v2 Premium"
-  WEBAPPTEMPLATENAME: "linux-webapp-template.json"
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build application source
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up java ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v1
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
+      - name: Set up Java version
+        uses: actions/setup-java@v1
+        with:
+          java-version: '17'
 
-    - name: Build with Gradle
-      run: |
-        cd Application
-        chmod +x gradlew
-        ./gradlew build test bootwar
+      - name: Build with Gradle
+        run: |
+          cd Application
+          chmod +x gradlew
+          ./gradlew build test bootwar
 
-    - name: Creating artifact directories
-      run: |
-        mkdir buildartifacts
-        mkdir deploymenttemplates
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: java-app
+          path: '${{ github.workspace }}/Application/build/libs/ROOT.war'
 
-    # Archive build artifact
-    - name: Archive Build artifacts
-      run: |
-        zip -qq -r ./buildartifacts/build.zip ./Application/build
-
-    # Uploading application to build artifact
-    - name: Upload target to Build Artifact
-      continue-on-error: false
-      uses: actions/upload-artifact@v2
-      with:
-        name: buildartifacts
-        path: buildartifacts
-
-    # Archive Arm templates
-    - name: Archive ArmTemplates
-      run: |
-        zip -qq -r ./deploymenttemplates/armtemplates.zip ./ArmTemplates
-
-    # Uploading Arm Templates to artifacts
-    - name: Upload Arm templates to Artifact
-      continue-on-error: false
-      uses: actions/upload-artifact@v2
-      with:
-        name: deploymenttemplates
-        path: deploymenttemplates
-
-  Deploy:
-    name: Deploy to azure web app
-    needs: [build]
+  deploy:
     runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    
     steps:
-    # Downloading build artifact
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v2
-      continue-on-error: false
-      with:
-        name: buildartifacts
-        path: buildartifacts
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: java-app
 
-    # Uzipping build artifacts
-    - name: Unzipping Build artifact
-      run: |
-        unzip -qq ./buildartifacts/build.zip -d .
-
-    # Downloading Arm Templates
-    - name: Download an Arm template
-      uses: actions/download-artifact@v2
-      continue-on-error: false
-      with:
-        name: deploymenttemplates
-        path: deploymenttemplates
-
-    # Uzipping Arm template directory
-    - name: Unzipping ARM artifact
-      run: |
-        unzip -qq ./deploymenttemplates/armtemplates.zip -d .
-
-    # login to azure
-    - name: Login to Azure
-      uses: azure/login@v1
-      continue-on-error: false
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    # Deploy Arm template
-    - name: Deploy ARM Template
-      uses: azure/CLI@v1
-      continue-on-error: false
-      with:
-        inlineScript: |
-          az group create --name "${{ env.RESOURCEGROUPNAME }}" --location "${{ env.LOCATION }}"
-          az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/${{ env.WEBAPPTEMPLATENAME }} --parameters webAppName="${{ env.AZURE_WEBAPP_NAME }}" hostingPlanName="${{ env.HOSTINGPLANNAME }}" appInsightsLocation="${{ env.APPINSIGHTLOCATION }}" sku="${{ env.SKU }}"
-
-    # Deploy web app on azure
-    - name: 'Deploy to Azure WebApp'
-      uses: azure/webapps-deploy@v2
-      with: 
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/libs/*.war'
-
-  FunctionalTests:
-    name: Run Functional tests
-    runs-on: windows-latest
-    needs: Deploy
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up java ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v1
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-
-    - name: Build functional test source
-      run: |
-        cd Tests
-        chmod +x gradlew
-        ./gradlew fatjar
-
-    # Run functional tests
-    - name: set up test environment and run tests
-      continue-on-error: false
-      run: |
-        cd Tests\build\libs
-        java -DwebAppUrl="https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/" -DChromeWebDriver="$env:ChromeWebDriver" -cp SampleWebAppFunctionalTests-jar-with-dependencies.jar org.junit.platform.console.ConsoleLauncher --class-path SampleWebAppFunctionalTests-jar-with-dependencies.jar --scan-class-path --reports-dir reports --include-engine junit-vintage
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'vialeea-test'
+          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FBDBE52D0C4D4D55AC965D63AE77E637 }}
+          package: '*.war'
