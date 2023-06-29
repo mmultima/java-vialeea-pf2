@@ -12,8 +12,8 @@ public interface PfCharacterRepository extends MongoRepository<PfCharacter, Stri
     @Query("{name:'?0'}")
     PfCharacter findItemByName(String name);
     
-    //@Query(value="{category:'?0'}", fields="{'name' : 1, 'quantity' : 1}")
-    //List<PfCharacter> findAll(String category);
+    @Query(value="{user:'?0'}") //, fields="{'name' : 1, 'quantity' : 1}")
+    List<PfCharacter> findAll(String user);
     
     public long count();
 

@@ -23,10 +23,12 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoIterable;
 import com.myapp.root.data.PfCharacter;
+import com.myapp.root.data.PfUser;
 import com.myapp.root.repositories.PfCharacterRepository;
+import com.myapp.root.repositories.PfUserRepository;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/char")
 public class MyRestController {
     @GetMapping(path="/alive")
     public boolean alive() {
@@ -61,6 +63,9 @@ public class MyRestController {
     @Autowired
     PfCharacterRepository pfCharacterRepository;
 
+    @Autowired
+    PfUserRepository pfUserRepository;
+
     @GetMapping(path="/save")
     public boolean save() {
         boolean value = false;
@@ -93,5 +98,15 @@ public class MyRestController {
         PfCharacter testChar = new PfCharacter(name);
 
         return  pfCharacterRepository.save(testChar);
+    }
+
+    @GetMapping(path="/loadbyuser/{name}")
+    public List<PfCharacter> loadByUser(@PathVariable String name) {
+        PfUser pfUser = pfUserRepository.findItemByName(name);
+        if (pfUser != null) {
+            return pfCharacterRepository.findAll(pfUser.getId());
+        } else {
+            return null;
+        }
     }
 }

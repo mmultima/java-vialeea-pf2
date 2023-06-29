@@ -9,6 +9,16 @@ public class PfCharacter {
     private String id;
 
     private String name;
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    private String user;
     
     public PfCharacter(String id, String name) {
         super();
