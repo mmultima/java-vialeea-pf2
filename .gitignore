@@ -1,0 +1,5 @@
+Application/bin/
+Tests/.gradle/
+
+### VS Code ###
+.vscode/
