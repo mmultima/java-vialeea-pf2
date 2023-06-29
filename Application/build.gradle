@@ -17,6 +17,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-tomcat'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+	//implementation group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.10.1'
+//	implementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.0.4'
 }
 
 bootWar {
