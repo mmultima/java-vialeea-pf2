@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.myapp.root.data.PfCharacter;
 import com.myapp.root.data.PfUser;
@@ -52,4 +54,10 @@ public class PfUserController {
 
         return value;
     }
+
+    @PostMapping("/testsave")
+    public PfUser testsavenew(@RequestBody PfUser pfUser) {
+        //System.err.println("Hello!");
+        return pfUser;
+    }    
 }

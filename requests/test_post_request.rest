@@ -1,0 +1,7 @@
+POST http://localhost:8080/api/user/testsave
+Content-Type: application/json
+
+{
+    "id": "649e0759cca2d08fbc00abab",
+    "name": "Some User"
+}

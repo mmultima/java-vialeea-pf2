@@ -1,0 +1,10 @@
+PUT http://localhost:8080/api/pfcharacters/a2b3
+Content-Type: application/json
+
+  {
+    "id": "649e06f7cca2d08fbc00abaa",
+    "name": "Lindevaile Tindomë",
+    "colour": "border-sky-300",
+    "image": "https://cdn.paizo.com/image/avatar/PZO9249-Riftwarden_90.jpeg",
+    "user": "649e0759cca2d08fbc00abab"
+  }

@@ -1,0 +1,6 @@
+POST http://localhost:8080/api/pfcharacters
+Content-Type: application/json
+
+{
+    "name": "Test Char Name"
+}

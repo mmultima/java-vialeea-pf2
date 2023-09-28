@@ -10,6 +10,38 @@ public class PfCharacter {
 
     private String name;
 
+    /* Currently only cdn.paizo.com images allowed */
+    private String image;
+
+    /* Colour of circle around the image. Probably will change. */
+    private String colour;
+
+    private BasicInfo basicInfo;
+
+    public String getImage() {
+        return image;
+    }
+
+    public BasicInfo getBasicInfo() {
+        return basicInfo;
+    }
+
+    public void setBasicInfo(BasicInfo basicInfo) {
+        this.basicInfo = basicInfo;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getColour() {
+        return colour;
+    }
+
+    public void setColour(String colour) {
+        this.colour = colour;
+    }
+
     public String getUser() {
         return user;
     }
