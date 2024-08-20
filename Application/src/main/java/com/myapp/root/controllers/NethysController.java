@@ -140,9 +140,20 @@ public class NethysController {
         return null;
     }
 
+    @GetMapping(path="/featlist/{trait}")
+    public List<Feat> featList(@PathVariable String trait) throws IOException {
+        return getFeatListInternal(trait);
+    }
+
     @GetMapping(path="/details")
-    public String details () throws IOException {
+    public List<Feat> details () throws IOException {
+        return getFeatListInternal("Sorcerer");
+    }
+    
+    private List<Feat> getFeatListInternal(String trait) throws IOException {
         String value = "";
+
+        List<Feat> feats = new ArrayList<>();
 
         URL url = new URL("https://example.com"); // Replace with the desired URL
 
@@ -167,7 +178,7 @@ public class NethysController {
 
             //requestBody = "{'query':{'function_score':{'query':{'bool':{'filter':[{'range':{'level':{'gte':1}}},{'range':{'level':{'lte':5}}},{'query_string':{'query':'category:feat trait:(\'Sorcerer\') NOT trait:kingdom','default_operator':'AND','fields':['name','legacy_name','remaster_name','text^0.1','trait_raw','type'],'minimum_should_match':0}},{'bool':{'must_not':{'exists':{'field':'remaster_id'}}}}],'must_not':[{'term':{'exclude_from_search':true}}]}},'boost_mode':'multiply','functions':[{'filter':{'terms':{'type':['Ancestry','Class','Versatile Heritage']}},'weight':1.2},{'filter':{'terms':{'type':['Trait']}},'weight':1.05}]}},'size':50,'sort':[{'level':{'order':'asc'}},{'name.keyword':{'order':'asc'}},'_doc'],'_source':false,'aggs':{'group1':{'composite':{'sources':[{'field1':{'terms':{'field':'type','missing_bucket':true}}}],'size':10000}}}}";
             // Working query for single // requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"range\":{\"level\":{\"gte\":1}}},{\"range\":{\"level\":{\"lte\":5}}},{\"query_string\":{\"query\":\"category:feat trait:(\\\"Sorcerer\\\") NOT trait:kingdom\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":50,\"sort\":[{\"level\":{\"order\":\"asc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"type\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
-            requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"range\":{\"level\":{\"gte\":" + startLevel + "}}},{\"range\":{\"level\":{\"lte\":" + endLevel + "}}},{\"query_string\":{\"query\":\"category:feat trait:(\\\"Sorcerer\\\") NOT trait:kingdom\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":50,\"sort\":[{\"level\":{\"order\":\"asc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"type\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
+            requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"range\":{\"level\":{\"gte\":" + startLevel + "}}},{\"range\":{\"level\":{\"lte\":" + endLevel + "}}},{\"query_string\":{\"query\":\"category:feat trait:(\\\"" + trait + "\\\") NOT trait:kingdom\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":50,\"sort\":[{\"level\":{\"order\":\"asc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"type\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
     //{"query":{"function_score":{"query":{"bool":{"filter":[{"range":{"level":{"gte":1}}},{"range":{"level":{"lte":5}}},{"query_string":{"query":"category:feat trait:(\"Sorcerer\") NOT trait:kingdom","default_operator":"AND","fields":["name","legacy_name","remaster_name","text^0.1","trait_raw","type"],"minimum_should_match":0}},{"bool":{"must_not":{"exists":{"field":"remaster_id"}}}}],"must_not":[{"term":{"exclude_from_search":true}}]}},"boost_mode":"multiply","functions":[{"filter":{"terms":{"type":["Ancestry","Class","Versatile Heritage"]}},"weight":1.2},{"filter":{"terms":{"type":["Trait"]}},"weight":1.05}]}},"size":50,"sort":[{"level":{"order":"asc"}},{"name.keyword":{"order":"asc"}},"_doc"],"_source":false,"aggs":{"group1":{"composite":{"sources":[{"field1":{"terms":{"field":"type","missing_bucket":true}}}],"size":10000}}}}
 
             connection.setDoOutput(true);
@@ -193,6 +204,7 @@ public class NethysController {
             //System.out.println("Response Body: " + responseBody.toString());
             for (Feat s: getFeats(responseBody.toString())) {
                 System.out.println("Feat: " + s.getName() + " ID: " + s.getId());
+                feats.add(s);
             }
             // Close connection
             connection.disconnect();
@@ -204,7 +216,9 @@ public class NethysController {
 
         }
 
-        return value;
+
+        return feats;
+        //return value;
         //'/Classes.aspx?ID=1
         //='/Feats.aspx?Traits=7
     }
