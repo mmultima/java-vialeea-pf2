@@ -1,5 +1,6 @@
 package com.myapp.root.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,11 +11,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.myapp.root.data.BasicInfo;
 import com.myapp.root.data.PfCharacter;
 import com.myapp.root.data.PfUser;
+import com.myapp.root.repositories.BasicInfoRepository;
 import com.myapp.root.repositories.PfCharacterRepository;
 import com.myapp.root.repositories.PfUserRepository;
 
@@ -26,7 +29,10 @@ public class PfCharacterController {
     PfCharacterRepository pfCharacterRepository;
     
     @Autowired
-    PfUserRepository pfUserRepository;   
+    PfUserRepository pfUserRepository;
+
+    @Autowired
+    BasicInfoRepository basicInfoRepository;   
 
     /*
     @GetMapping(path="/save")
@@ -48,9 +54,26 @@ public class PfCharacterController {
     */
 
     @GetMapping(path="")
-    public List<PfCharacter> loadAll() {
- 
-        List<PfCharacter> value = pfCharacterRepository.findAll();
+    public List<PfCharacter> loadAll(@RequestParam Optional<String> user) {
+        //TODO: The findAll() shouldn't be visible for all
+        List<PfCharacter> value = user.isPresent() ? 
+            loadByUser(user.get()) : 
+            pfCharacterRepository.findAll();
+
+        BasicInfo basicInfo = new BasicInfo();
+
+        basicInfo.setLevel(1);
+        basicInfo.setFort(5);
+        basicInfo.setWill(4);
+        basicInfo.setRef(6);
+        basicInfo.setAC(17);
+        basicInfo.setHP(14);
+        basicInfo.setRace("elf");
+        basicInfo.setGender("Female");
+        basicInfo.setCharClass("sorcerer");
+
+
+        value.forEach(pfchar -> pfchar.setBasicInfo(basicInfo));
 
         return value;
     }
@@ -84,7 +107,11 @@ public class PfCharacterController {
 
         //return  pfCharacterRepository.save(testChar);
 
-        pfCharacter.setName("Changed name");
+        if (pfCharacter.getId() == "") {
+            pfCharacter.setId(null);
+        }
+
+        pfCharacterRepository.save(pfCharacter);
 
         return pfCharacter;
     }
@@ -132,7 +159,35 @@ public class PfCharacterController {
 
     @PutMapping("/basicinfo/{id}")
     public BasicInfo updateBasicInfo(@RequestBody BasicInfo basicInfo, @PathVariable String id) {
-        return basicInfo;
+        System.out.println(basicInfo.getAC());
+        System.out.println(basicInfo.getCharClass());
+        System.out.println(basicInfo.getFort());
+        System.out.println(basicInfo.getGender());
+        System.out.println(basicInfo.getHP());
+        System.out.println(basicInfo.getLevel());
+        System.out.println(basicInfo.getRace());
+        System.out.println(basicInfo.getRef());
+        System.out.println(basicInfo.getWill());
+
+        BasicInfo savedInfo = basicInfoRepository.save(basicInfo);
+
+        return savedInfo;
+    }
+
+    @GetMapping(path="/basicinfo/{id}")
+    public BasicInfo loadBasicInfo(@PathVariable String id) {
+ 
+        Optional<BasicInfo> value = basicInfoRepository.findById(id);
+
+        if (value.isPresent()) {
+            if (value.get().getFeats() == null) {
+                value.get().setFeats(new ArrayList<String>());
+            }
+            return value.get();
+        }
+
+        /* How do we return correct HTML error? */
+        return null;
     }
 }
 

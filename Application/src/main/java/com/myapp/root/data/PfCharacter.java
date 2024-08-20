@@ -18,6 +18,18 @@ public class PfCharacter {
 
     private BasicInfo basicInfo;
 
+    private String basicInfoId;
+
+    // Getter for BasicInfoId
+    public String getBasicInfoId() {
+        return basicInfoId;
+    }
+
+    // Setter for BasicInfoId
+    public void setBasicInfoId(String basicInfoId) {
+        this.basicInfoId = basicInfoId;
+    }
+
     public String getImage() {
         return image;
     }
