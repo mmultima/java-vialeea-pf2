@@ -223,6 +223,80 @@ public class NethysController {
         //='/Feats.aspx?Traits=7
     }
 
+    @GetMapping(path="/weaponList/{trait}")
+    public List<Weapon> weaponList(@PathVariable String trait) throws IOException {
+        return getWeaponListInternal(trait);
+    }
+
+    private List<Weapon> getWeaponListInternal(String trait) throws IOException {
+        String value = "";
+
+        List<Weapon> weapons = new ArrayList<>();
+
+        URL url = new URL("https://example.com"); // Replace with the desired URL
+
+        url = new URL("https://elasticsearch.aonprd.com/aon/_search?track_total_hits=true");
+
+        String category = "simple";
+
+        for (int i = 0; i < 1; i++) {
+
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+
+            // Set request headers, if needed
+            connection.setRequestProperty("Content-Type", "application/json");
+            //connection.setRequestProperty("Authorization", "Bearer <your_token>");
+
+            // Set request body, if needed
+            String requestBody = "{\"key\": \"value\"}";
+
+            //int startLevel = i * 5 + 1;
+            //int endLevel = i * 5 + 5;
+
+            //System.out.println("Start Level: " + startLevel + " End Level: " + endLevel);
+
+            //requestBody = "{'query':{'function_score':{'query':{'bool':{'filter':[{'range':{'level':{'gte':1}}},{'range':{'level':{'lte':5}}},{'query_string':{'query':'category:feat trait:(\'Sorcerer\') NOT trait:kingdom','default_operator':'AND','fields':['name','legacy_name','remaster_name','text^0.1','trait_raw','type'],'minimum_should_match':0}},{'bool':{'must_not':{'exists':{'field':'remaster_id'}}}}],'must_not':[{'term':{'exclude_from_search':true}}]}},'boost_mode':'multiply','functions':[{'filter':{'terms':{'type':['Ancestry','Class','Versatile
+            requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"terms\":{\"weapon_category\":[\"" + category + "\"]}}]}},{\"query_string\":{\"query\":\"category:weapon\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":50,\"sort\":[{\"weapon_type\":{\"order\":\"asc\"}},{\"weapon_category\":{\"order\":\"desc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"type\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
+ 
+            connection.setDoOutput(true);
+            OutputStream outputStream = connection.getOutputStream();
+            outputStream.write(requestBody.getBytes());
+            outputStream.flush();
+            outputStream.close();
+
+            // Get response code
+            int responseCode = connection.getResponseCode();
+
+            // Read response body
+            BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String line;
+            StringBuilder responseBody = new StringBuilder();
+            while ((line = br.readLine()) != null) {
+                //responseBody.append(line);
+                System.out.println("Line: " + line);
+                //"sort":["ranged","simple","sling",29033]
+                Pattern pattern = Pattern.compile("sort\":\\[\"(\\w+)\",\"(\\w+)\",\"(\\w+)\",(\\d+)\\]");
+                Matcher matcher = pattern.matcher(line);
+                while (matcher.find()) {
+                    //description = matcher.group(1);
+                    //System.out.println("Match: " + matcher.group(1));
+                    Weapon weapon = new Weapon();
+                    weapon.setId(Integer.parseInt(matcher.group(4)));
+                    weapon.setName(matcher.group(3));
+                    //Integer.parseInt(matcher.group(4)), matcher.group(1), matcher.group(2), matcher.group(3));
+                    weapons.add(weapon);
+                }
+
+            }
+            br.close();
+
+            connection.disconnect();
+        }
+
+        return weapons;
+    }
+
     public void feats (int trait) {
         //https://2e.aonprd.com/Feats.aspx?Traits=148&values-from=level%3A20&values-to=level%3A20&sort=level-asc+name-asc&display=grouped&group-fields=level&link-layout=vertical-with-summary
         try {
