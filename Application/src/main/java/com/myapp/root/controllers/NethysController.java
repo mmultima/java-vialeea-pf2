@@ -363,6 +363,74 @@ public class NethysController {
 
     }
 
+    @GetMapping(path="/gearList/{category}")
+    public List<Gear> gearList(String category) throws IOException {
+        return getGearListInternal(category);
+    }
+
+    private List<Gear> getGearListInternal(String category) throws IOException {
+        String value = "";
+
+        List<Gear> gears = new ArrayList<>();
+
+        URL url = new URL("https://example.com"); // Replace with the desired URL
+
+        url = new URL("https://elasticsearch.aonprd.com/aon/_search?track_total_hits=true");
+
+        for (int i = 0; i < 1; i++) {
+
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+
+            // Set request headers, if needed
+            connection.setRequestProperty("Content-Type", "application/json");
+            //connection.setRequestProperty("Authorization", "Bearer <your_token>");
+
+            // Set request body, if needed
+            String requestBody = "{\"key\": \"value\"}";
+
+            //int startLevel = i * 5 + 1;
+            //int endLevel = i * 5 + 5;
+
+            //System.out.println("Start Level: " + startLevel + " End Level: " + endLevel);
+            requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"query_string\":{\"query\":\"category:(armor OR equipment OR shield OR siege-weapon OR vehicle OR weapon) item_category:\\\"Adventuring Gear\\\"\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":300,\"sort\":[{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"type\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
+            //requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"query_string\":{\"query\":\"category:(armor OR equipment OR shield OR siege-weapon OR vehicle OR weapon) item_category:\\\"Adventuring Gear\\\"\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":10000,\"sort\":[{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"search_after\":[\"clothing (desert)\",13874]}";
+            //requestBody = "{'query':{'function_score':{'query':{'bool':{'filter':[{'range':{'level':{'gte':1}}},{'range':{'level':{'lte':5}}},{'query_string':{'query':'category:feat trait:(\'Sorcerer\') NOT trait:kingdom','default_operator':'AND','fields':['name','legacy_name','remaster_name','text^0.1','trait_raw','type'],'minimum_should_match':0}},{'bool':{'must_not':{'exists':{'field':'remaster_id'}}}}],'must_not':[{'term':{'exclude_from_search':true}}]}},'boost_mode':'multiply','functions':[{'filter':{'terms':{'type':['Ancestry','Class','Versatile
+            connection.setDoOutput(true);
+            OutputStream outputStream = connection.getOutputStream();
+            outputStream.write(requestBody.getBytes());
+            outputStream.flush();
+            outputStream.close();
+
+            // Get response code
+            int responseCode = connection.getResponseCode();
+            
+            // Read response body
+            BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String line;
+            StringBuilder responseBody = new StringBuilder();
+            while((line = br.readLine()) != null) {
+                //responseBody.append(line);
+                System.out.println("Line: " + line);
+                Pattern pattern = Pattern.compile("_id\":\"equipment\\-(\\d+)(\"|\\-).+?sort\":\\[\"(.+?)\",(\\d+)\\]");
+                Matcher matcher = pattern.matcher(line);
+                while (matcher.find()) {
+                    //description = matcher.group(1);
+                    //System.out.println("Match: " + matcher.group(1));
+                    Gear gear = new Gear();
+                    gear.setId(Integer.parseInt(matcher.group(1)));
+                    gear.setName(matcher.group(3));
+                    //Integer.parseInt(matcher.group(4)), matcher.group(1), matcher.group(2), matcher.group(3));
+                    gears.add(gear);
+                }
+            }
+
+
+        }
+
+        return gears;
+    }
+
     public void feats (int trait) {
         //https://2e.aonprd.com/Feats.aspx?Traits=148&values-from=level%3A20&values-to=level%3A20&sort=level-asc+name-asc&display=grouped&group-fields=level&link-layout=vertical-with-summary
         try {
