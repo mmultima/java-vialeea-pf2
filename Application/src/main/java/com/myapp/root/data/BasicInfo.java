@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.myapp.root.data.equipment.GearCompact;
+
 @Document("basicinfo")
 public class BasicInfo {
     @Id
@@ -23,6 +25,7 @@ public class BasicInfo {
     private List<String> armor;
     private List<String> gear;
     private List<String> spells;
+    private List<GearCompact> gearCompact;
 
     private int strength;
     private int dexterity;
@@ -136,6 +139,16 @@ public class BasicInfo {
     // Setter for gear
     public void setGear(List<String> gear) {
         this.gear = gear;
+    }
+
+    // Getter for gearCompact
+    public List<GearCompact> getGearCompact() {
+        return gearCompact;
+    }
+
+    // Setter for gearCompact
+    public void setGearCompact(List<GearCompact> gearCompact) {
+        this.gearCompact = gearCompact;
     }
 
     // Getter for spells

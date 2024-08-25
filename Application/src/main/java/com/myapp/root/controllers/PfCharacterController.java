@@ -1,5 +1,6 @@
 package com.myapp.root.controllers;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.myapp.root.data.BasicInfo;
 import com.myapp.root.data.PfCharacter;
 import com.myapp.root.data.PfUser;
+import com.myapp.root.data.equipment.Gear;
+import com.myapp.root.data.equipment.GearCompact;
 import com.myapp.root.repositories.BasicInfoRepository;
 import com.myapp.root.repositories.PfCharacterRepository;
 import com.myapp.root.repositories.PfUserRepository;
@@ -34,6 +37,8 @@ public class PfCharacterController {
     @Autowired
     BasicInfoRepository basicInfoRepository;   
 
+    @Autowired
+    NethysController nethysController;
     /*
     @GetMapping(path="/save")
     public boolean save() {
@@ -158,7 +163,7 @@ public class PfCharacterController {
     }
 
     @PutMapping("/basicinfo/{id}")
-    public BasicInfo updateBasicInfo(@RequestBody BasicInfo basicInfo, @PathVariable String id) {
+    public BasicInfo updateBasicInfo(@RequestBody BasicInfo basicInfo, @PathVariable String id) throws IOException {
         System.out.println(basicInfo.getAC());
         System.out.println(basicInfo.getCharClass());
         System.out.println(basicInfo.getFort());
@@ -168,6 +173,40 @@ public class PfCharacterController {
         System.out.println(basicInfo.getRace());
         System.out.println(basicInfo.getRef());
         System.out.println(basicInfo.getWill());
+
+        List<Gear> gearList = nethysController.gearList("adsf");
+
+
+        if (basicInfo.getGear() != null) {
+            if (basicInfo.getGearCompact() == null) {
+                basicInfo.setGearCompact(new ArrayList<>());
+            }
+
+            for (int i = 0; i < basicInfo.getGear().size(); i++) {
+                boolean found = false;
+
+                for (int j = 0; j < basicInfo.getGearCompact().size(); j++) {
+                    if (basicInfo.getGearCompact().get(j).getId() == Integer.parseInt(basicInfo.getGear().get(i))) {
+                        found = true;
+                    }
+                }
+
+                if (!found) {
+                    GearCompact gearCompact = new GearCompact();
+
+                    gearCompact.setId(Integer.parseInt(basicInfo.getGear().get(i)));
+
+                    for (Gear gear : gearList) {
+                        if (gear.getId() == gearCompact.getId()) {
+                            gearCompact.setName(gear.getName());
+                            gearCompact.setSubId(gear.getSubId());
+                        }
+                    }                    
+
+                    basicInfo.getGearCompact().add(gearCompact);
+                }
+            }
+        }
 
         BasicInfo savedInfo = basicInfoRepository.save(basicInfo);
 

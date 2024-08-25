@@ -412,14 +412,34 @@ public class NethysController {
             while((line = br.readLine()) != null) {
                 //responseBody.append(line);
                 System.out.println("Line: " + line);
-                Pattern pattern = Pattern.compile("_id\":\"equipment\\-(\\d+)(\"|\\-).+?sort\":\\[\"(.+?)\",(\\d+)\\]");
+                //Pattern pattern = Pattern.compile("_id\":\"equipment\\-(\\d+)(\"|\\-).+?sort\":\\[\"(.+?)\",(\\d+)\\]");
+                Pattern pattern = Pattern.compile("_id\":\"equipment\\-(\\d+)(\"|\\-(\\d+)).+?sort\":\\[\"(.+?)\",(\\d+)\\]");
                 Matcher matcher = pattern.matcher(line);
                 while (matcher.find()) {
                     //description = matcher.group(1);
                     //System.out.println("Match: " + matcher.group(1));
                     Gear gear = new Gear();
-                    gear.setId(Integer.parseInt(matcher.group(1)));
-                    gear.setName(matcher.group(3));
+
+                    //String idString = matcher.group(3) != null ? matcher.group(3) : matcher.group(1);
+
+                    String idString = matcher.group(1);
+
+                    gear.setId(Integer.parseInt(idString));
+                    gear.setName(matcher.group(4));
+
+                    if (matcher.group(3) != null) {
+                        gear.setSubId(Integer.parseInt(matcher.group(3)));
+                    } else {
+                        gear.setSubId(0);
+                    }
+
+                    System.out.print("Match: " + gear.getId() + " groupcount " + matcher.groupCount());
+                    for (int j = 0; j< matcher.groupCount(); j++) {
+                        System.out.print(" Group: " + j + " " + matcher.group(j));
+                    }
+                    System.out.println();
+
+
                     //Integer.parseInt(matcher.group(4)), matcher.group(1), matcher.group(2), matcher.group(3));
                     gears.add(gear);
                 }
@@ -685,7 +705,17 @@ public class NethysController {
                     name = matcher2.group(1);
                 }
 
+                Pattern pattern3 = Pattern.compile("\\/span>([^<]*?)<span style=\"margin\\-left\\:auto");
+                Matcher matcher3 = pattern3.matcher(line);
+
+                List<String> subItemNames = new ArrayList<>();
+                while (matcher3.find()) {
+                    subItemNames.add(matcher3.group(1));
+                }
+
                 gear = new Gear(id2, name, description);
+
+                gear.setSubItemNames(subItemNames);
             }
         }
 
