@@ -17,7 +17,7 @@ import com.myapp.root.repositories.PfCharacterRepository;
 import com.myapp.root.repositories.PfUserRepository;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 public class PfUserController {
     @Autowired
     private PfUserRepository pfUserRepository;
@@ -25,6 +25,7 @@ public class PfUserController {
     @Autowired
     private PfCharacterRepository pfCharacterRepository;
 
+    /*
     @GetMapping("/save/{name}")
     public PfUser savenew(@PathVariable String name) {
         PfUser user = new PfUser();
@@ -32,7 +33,9 @@ public class PfUserController {
 
         return pfUserRepository.save(user);
     }
+*/
 
+/*
     @GetMapping("/change/{pfcharacter}/{user}")
     public PfCharacter changeUser(@PathVariable String pfcharacter, @PathVariable String user) {
         PfCharacter pfCharacter2 = pfCharacterRepository.findItemByName(pfcharacter);
@@ -45,19 +48,32 @@ public class PfUserController {
             return null;
         }
     }
+*/
 
+    @PostMapping(path="")
+    public PfUser save(@RequestBody PfUser pfUser) {
+        System.out.println("Saving user: " + pfUser.getName());
+        return pfUserRepository.save(pfUser);
+    }
 
-    @GetMapping(path="/load")
-    public List<PfUser> load() {
+    @GetMapping(path="")
+    public List<PfUser> loadAll() {
  
         List<PfUser> value = pfUserRepository.findAll();
 
         return value;
     }
 
+    /*
     @PostMapping("/testsave")
     public PfUser testsavenew(@RequestBody PfUser pfUser) {
         //System.err.println("Hello!");
         return pfUser;
-    }    
+    }
+        */
+
+    @GetMapping("/{id}")
+    public PfUser load(@PathVariable String id) {
+        return pfUserRepository.findById(id).orElse(null);
+    }
 }

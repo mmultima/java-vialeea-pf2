@@ -793,6 +793,15 @@ public class NethysController {
         return value;
         */
     //}
+
+    @GetMapping(path="/spellLists/{list}/{level}")
+    public List<Spell> spellList(@PathVariable String list, @PathVariable int level) throws IOException {
+        return getSpellListInternal(list, level);
+    }
+
+    private List<Spell> getSpellListInternal(String list, int level) {
+        return null;
+    }
 }
 
 
