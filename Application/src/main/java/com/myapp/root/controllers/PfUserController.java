@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -75,5 +76,18 @@ public class PfUserController {
     @GetMapping("/{id}")
     public PfUser load(@PathVariable String id) {
         return pfUserRepository.findById(id).orElse(null);
+    }
+
+    @PutMapping("/{id}")
+    public PfUser update(@PathVariable String id, @RequestBody PfUser pfUser) {
+        PfUser user = pfUserRepository.findById(id).orElse(null);
+
+        if (user != null) {
+            user.setName(pfUser.getName());
+            user.setPfs(pfUser.getPfs());
+            return pfUserRepository.save(user);
+        } else {
+            return null;
+        }
     }
 }

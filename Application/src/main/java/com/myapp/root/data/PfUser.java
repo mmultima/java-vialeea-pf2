@@ -10,6 +10,8 @@ public class PfUser {
 
     private String name ;
 
+    private int pfs;
+
     public String getId() {
         return id;
     }
@@ -24,5 +26,13 @@ public class PfUser {
 
     public void setName(String name) {
         this.name = name;
-    }    
+    }
+
+    public int getPfs() {
+        return pfs;
+    }
+
+    public void setPfs(int pfs) {
+        this.pfs = pfs;
+    }
 }

@@ -18,6 +18,7 @@ public class Skills {
     private int stealth;
     private int survival;
     private int thievery;
+    private int perception; //Not really a skill, but it's here for now
 
     public int getAcrobatics() {
         return acrobatics;
@@ -152,6 +153,14 @@ public class Skills {
     }
 
     public void setThievery(int thievery) {
-        this.thievery = thievery;
+        this.thievery = thievery;    
+    }
+
+    public int getPerception() {
+        return perception;
+    }
+
+    public void setPerception(int perception) {
+        this.perception = perception;
     }
 }

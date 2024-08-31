@@ -34,7 +34,19 @@ public class BasicInfo {
     private int wisdom;
     private int charisma;
 
+    private int pfs;
+    private String faction;
+    private String xpProgression;
+
+
     private Skills skills;
+
+    private int speed;
+
+    private String explorationMode;
+
+    private int focusPoints;
+
 
     // Getter for id
     public String getId() {
@@ -230,5 +242,65 @@ public class BasicInfo {
     // Setter for skills
     public void setSkills(Skills skills) {
         this.skills = skills;
+    }
+
+    // Getter for pfs
+    public int getPfs() {
+        return pfs;
+    }
+
+    // Setter for pfs
+    public void setPfs(int pfs) {
+        this.pfs = pfs;
+    }
+
+    // Getter for faction
+    public String getFaction() {
+        return faction;
+    }
+
+    // Setter for faction
+    public void setFaction(String faction) {
+        this.faction = faction;
+    }
+
+    // Getter for xpProgression
+    public String getXpProgression() {
+        return xpProgression;
+    }
+
+    // Setter for xpProgression
+    public void setXpProgression(String xpProgression) {
+        this.xpProgression = xpProgression;
+    }
+
+    // Getter for speed
+    public int getSpeed() {
+        return speed;
+    }
+
+    // Setter for speed
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+
+    // Getter for explorationMode
+    public String getExplorationMode() {
+        return explorationMode;
+    }
+
+    // Setter for explorationMode
+    public void setExplorationMode(String explorationMode) {
+        this.explorationMode = explorationMode;
+    }
+
+    // Getter for focusPoints
+    public int getFocusPoints() {
+        return focusPoints;
+    }
+
+    // Setter for focusPoints
+    public void setFocusPoints(int focusPoints) {
+        this.focusPoints = focusPoints;
     }
 }

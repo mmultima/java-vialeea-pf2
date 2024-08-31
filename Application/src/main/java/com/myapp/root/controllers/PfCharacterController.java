@@ -16,11 +16,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.myapp.root.data.BasicInfo;
+import com.myapp.root.data.Casting;
 import com.myapp.root.data.PfCharacter;
 import com.myapp.root.data.PfUser;
 import com.myapp.root.data.equipment.Gear;
 import com.myapp.root.data.equipment.GearCompact;
 import com.myapp.root.repositories.BasicInfoRepository;
+import com.myapp.root.repositories.CastingsRepository;
 import com.myapp.root.repositories.PfCharacterRepository;
 import com.myapp.root.repositories.PfUserRepository;
 
@@ -39,6 +41,9 @@ public class PfCharacterController {
 
     @Autowired
     NethysController nethysController;
+
+    @Autowired
+    CastingsRepository castingsRepository;
     /*
     @GetMapping(path="/save")
     public boolean save() {
@@ -227,6 +232,34 @@ public class PfCharacterController {
 
         /* How do we return correct HTML error? */
         return null;
+    }
+
+    @GetMapping(path="/castings/{id}")
+    public Casting loadCasting(@PathVariable String id) {
+        Optional<Casting> value = castingsRepository.findById(id);
+
+        if (value.isPresent()) {
+            return value.get();
+        }
+
+        return null;
+    }
+
+    @PostMapping(path="/castings")
+    public Casting saveCasting(@RequestBody Casting casting) {
+        System.out.println("########## name " + casting.getClassName());
+
+        Casting value = castingsRepository.save(casting);
+
+        System.out.println("########## id " + value.getId());
+
+        return value;
+    }
+
+    @PutMapping(path="/castings/{id}")
+    public Casting updateCasting(@RequestBody Casting casting, @PathVariable String id) {
+        Casting value = castingsRepository.save(casting);
+        return value;
     }
 }
 
