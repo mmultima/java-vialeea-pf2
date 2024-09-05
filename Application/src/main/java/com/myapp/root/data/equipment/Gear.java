@@ -8,6 +8,8 @@ public class Gear {
     private String description;
     private int subId;
     private List<String> subItemNames;
+    private List<Integer> pricesInCopper;
+    private List<String> bulks;
 
     public Gear(int id2, String name, String description) {
         this.id = id2;
@@ -57,5 +59,21 @@ public class Gear {
 
     public void setSubItemNames(List<String> subItemNames) {
         this.subItemNames = subItemNames;
+    }
+
+    public List<Integer> getPricesInCopper() {
+        return pricesInCopper;
+    }
+
+    public void setPricesInCopper(List<Integer> pricesInCopper) {
+        this.pricesInCopper = pricesInCopper;
+    }
+
+    public List<String> getBulks() {
+        return bulks;
+    }
+
+    public void setBulks(List<String> bulks) {
+        this.bulks = bulks;
     }
 }

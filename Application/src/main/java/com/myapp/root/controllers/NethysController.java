@@ -859,6 +859,62 @@ public class NethysController {
                 gear = new Gear(id2, name, description);
 
                 gear.setSubItemNames(subItemNames);
+
+                if (subItemNames.size() == 1) {
+                    Pattern pricePattern = Pattern.compile("<b>Price<\\/b> (\\d+) (\\w)p(, (\\d+) (\\w)p)?");
+                    Matcher priceMatcher = pricePattern.matcher(line);
+                    if (priceMatcher.find()) {
+                        Integer priceInteger = 0;
+                        priceInteger = (Integer.parseInt(priceMatcher.group(1)) * (priceMatcher.group(2).equals("g") ? 100 : priceMatcher.group(2).equals("s") ? 10 : 1));
+                        if (priceMatcher.group(3) != null) {
+                            priceInteger += (Integer.parseInt(priceMatcher.group(4)) * (priceMatcher.group(5).equals("g") ? 100 : priceMatcher.group(5).equals("s") ? 10 : 1));
+                        }
+                        List<Integer> prices = new ArrayList<>();
+                        prices.add(priceInteger);
+                        gear.setPricesInCopper(prices);
+                    }
+
+                    Pattern bulkPattern = Pattern.compile("<b>Bulk<\\/b> ([^<]+)<");
+                    Matcher bulkMatcher = bulkPattern.matcher(line);
+                    if (bulkMatcher.find()) {
+                        String bulk = (bulkMatcher.group(1));
+                        List<String> bulks = new ArrayList<>();
+                        bulks.add(bulk);
+                        gear.setBulks(bulks);
+                    }
+                }
+                else {
+                    //Same as in subitem name match.
+                    String[] subItemStrings = line.split("\\/span>([^<]*?)<span style=\"margin\\-left\\:auto");
+                    List<Integer> prices = new ArrayList<>();
+                    List<String> bulks = new ArrayList<>();
+                    for (int j = 1; j < subItemStrings.length; j++) {
+                        String subItemString = subItemStrings[j];
+                        Pattern pricePattern = Pattern.compile("<b>Price<\\/b> (\\d+) (\\w)p(, (\\d+) (\\w)p)?");
+                        Matcher priceMatcher = pricePattern.matcher(subItemString);
+                        if (priceMatcher.find()) {
+                            Integer priceInteger = 0;
+                            priceInteger = (Integer.parseInt(priceMatcher.group(1)) * (priceMatcher.group(2).equals("g") ? 100 : priceMatcher.group(2).equals("s") ? 10 : 1));
+                            if (priceMatcher.group(3) != null) {
+                                priceInteger += (Integer.parseInt(priceMatcher.group(4)) * (priceMatcher.group(5).equals("g") ? 100 : priceMatcher.group(5).equals("s") ? 10 : 1));
+                            }
+                            prices.add(priceInteger);
+                        } else {
+                            prices.add(0);
+                        }
+
+                        Pattern bulkPattern = Pattern.compile("<b>Bulk<\\/b> ([^<]+)<");
+                        Matcher bulkMatcher = bulkPattern.matcher(subItemString);
+                        if (bulkMatcher.find()) {
+                            String bulk = (bulkMatcher.group(1));
+                            bulks.add(bulk);
+                        } else {
+                            bulks.add("");
+                        }
+                    }
+                    gear.setPricesInCopper(prices);
+                    gear.setBulks(bulks);
+                }
             }
         }
 

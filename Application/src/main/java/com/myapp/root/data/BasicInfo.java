@@ -68,6 +68,16 @@ public class BasicInfo {
 
     private String tradition; //TODO: Move to Castings
 
+    private List<String> languages;
+
+    private String botMe;
+
+    private String loreName;
+
+    private String castingAbility;
+
+    private int moneyEarned;
+
     // Getter for id
     public String getId() {
         return id;
@@ -452,5 +462,55 @@ public class BasicInfo {
     // Setter for tradition
     public void setTradition(String tradition) {
         this.tradition = tradition;
+    }
+
+    // Getter for languages
+    public List<String> getLanguages() {
+        return languages;
+    }
+
+    // Setter for languages
+    public void setLanguages(List<String> languages) {
+        this.languages = languages;
+    }
+
+    // Getter for botMe
+    public String getBotMe() {
+        return botMe;
+    }
+
+    // Setter for botMe
+    public void setBotMe(String botMe) {
+        this.botMe = botMe;
+    }
+
+    // Getter for loreName
+    public String getLoreName() {
+        return loreName;
+    }
+
+    // Setter for loreName
+    public void setLoreName(String loreName) {
+        this.loreName = loreName;
+    }
+
+    // Getter for castingAbility
+    public String getCastingAbility() {
+        return castingAbility;
+    }
+
+    // Setter for castingAbility
+    public void setCastingAbility(String castingAbility) {
+        this.castingAbility = castingAbility;
+    }
+
+    // Getter for moneyEarned
+    public int getMoneyEarned() {
+        return moneyEarned;
+    }
+
+    // Setter for moneyEarned
+    public void setMoneyEarned(int moneyEarned) {
+        this.moneyEarned = moneyEarned;
     }
 }
