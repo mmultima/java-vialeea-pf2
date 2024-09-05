@@ -47,6 +47,26 @@ public class BasicInfo {
 
     private int focusPoints;
 
+    private int ancestry;
+
+    private int heritage;
+
+    private int background;
+
+    private String size;
+
+    private boolean lowLightVision;
+    private boolean darkVision;
+    private boolean greaterDarkVision;
+    private boolean scent;
+    private boolean tremorsense;
+
+    private String simple;
+    private String martial;
+
+    private String muse;
+
+    private String tradition; //TODO: Move to Castings
 
     // Getter for id
     public String getId() {
@@ -302,5 +322,135 @@ public class BasicInfo {
     // Setter for focusPoints
     public void setFocusPoints(int focusPoints) {
         this.focusPoints = focusPoints;
+    }
+
+    // Getter for ancestry
+    public int getAncestry() {
+        return ancestry;
+    }
+
+    // Setter for ancestry 
+    public void setAncestry(int ancestry) {
+        this.ancestry = ancestry;
+    }
+
+    // Getter for heritage
+    public int getHeritage() {
+        return heritage;
+    }
+
+    // Setter for heritage
+    public void setHeritage(int heritage) {
+        this.heritage = heritage;
+    }
+
+    // Getter for background
+    public int getBackground() {
+        return background;
+    }
+
+    // Setter for background
+    public void setBackground(int background) {
+        this.background = background;
+    }
+
+    // Getter for size
+    public String getSize() {
+        return size;
+    }
+
+    // Setter for size
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    // Getter for lowLightVision
+    public boolean isLowLightVision() {
+        return lowLightVision;
+    }
+
+    // Setter for lowLightVision
+    public void setLowLightVision(boolean lowLightVision) {
+        this.lowLightVision = lowLightVision;
+    }
+
+    // Getter for darkVision
+    public boolean isDarkVision() {
+        return darkVision;
+    }
+
+    // Setter for darkVision
+    public void setDarkVision(boolean darkVision) {
+        this.darkVision = darkVision;
+    }
+
+    // Getter for greaterDarkVision
+    public boolean isGreaterDarkVision() {
+        return greaterDarkVision;
+    }
+
+    // Setter for greaterDarkVision
+    public void setGreaterDarkVision(boolean greaterDarkVision) {
+        this.greaterDarkVision = greaterDarkVision;
+    }
+
+    // Getter for scent
+    public boolean isScent() {
+        return scent;
+    }
+
+    // Setter for scent
+    public void setScent(boolean scent) {
+        this.scent = scent;
+    }
+
+    // Getter for tremorsense
+    public boolean isTremorsense() {
+        return tremorsense;
+    }
+
+    // Setter for tremorsense
+    public void setTremorsense(boolean tremorsense) {
+        this.tremorsense = tremorsense;
+    }
+
+    // Getter for simple
+    public String getSimple() {
+        return simple;
+    }
+
+    // Setter for simple
+    public void setSimple(String simple) {
+        this.simple = simple;
+    }
+
+    // Getter for martial
+    public String getMartial() {
+        return martial;
+    }
+
+    // Setter for martial
+    public void setMartial(String martial) {
+        this.martial = martial;
+    }
+
+    // Getter for muse
+    public String getMuse() {
+        return muse;
+    }
+
+    // Setter for muse
+    public void setMuse(String muse) {
+        this.muse = muse;
+    }
+
+    // Getter for tradition
+    public String getTradition() {
+        return tradition;
+    }
+
+    // Setter for tradition
+    public void setTradition(String tradition) {
+        this.tradition = tradition;
     }
 }

@@ -3,6 +3,7 @@ package com.myapp.root.controllers;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedReader;
@@ -20,8 +21,14 @@ import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Generated;
+
+import com.myapp.root.data.Ancestry;
+import com.myapp.root.data.Background;
 import com.myapp.root.data.CharacterClass;
+import com.myapp.root.data.CharacterClassLong;
 import com.myapp.root.data.Feat;
+import com.myapp.root.data.Heritage;
 import com.myapp.root.data.Spell;
 import com.myapp.root.data.Trait;
 import com.myapp.root.data.equipment.Armor;
@@ -603,6 +610,9 @@ public class NethysController {
 
         while ((line = br.readLine()) != null) {        
             if (line.contains("ctl00_RadDrawer1_Content_MainContent_DetailedOutput")) {
+                System.out.println("Line: " + i);
+                System.out.println(line);
+
                 int id2 = 0;
                 String name = null;
                 String description = null;
@@ -621,6 +631,121 @@ public class NethysController {
                 }
 
                 weapon = new Weapon(id2, name, description);
+
+                //<b>Price</b> 4 gp; <b>Damage</b> 1d8 S; <b>Bulk</b> 1<br /><b>Hands</b> 1<br /><b>Type</b> Melee; <b>Category</b> Martial; <b>Group</b> <u><a href="WeaponGroups.aspx?ID=15">Sword</a>
+/*
+                Pattern detailsPattern = Pattern.compile(
+                    "<b>Price</b> (\\d+) gp; " +
+                    "<b>Damage</b> ([^ ]+) [^;]+; " +
+                    "<b>Bulk</b> (\\d+)<br />" +
+                    "<b>Hands</b> (\\d+)<br />" +
+                    "<b>Type</b> ([^;]+); " +
+                    "<b>Category</b> ([^;]+); " +
+                    "<b>Group</b> <u><a href=\"WeaponGroups.aspx\\?ID=\\d+\">([^<]+)</a>"
+                );
+                
+                Matcher detailsMatcher = detailsPattern.matcher(line);
+                if (detailsMatcher.find()) {
+                    String price = detailsMatcher.group(1);
+                    String damage = detailsMatcher.group(2);
+                    String bulk = detailsMatcher.group(3);
+                    String hands = detailsMatcher.group(4);
+                    String type = detailsMatcher.group(5);
+                    String category = detailsMatcher.group(6);
+                    String group = detailsMatcher.group(7);
+                
+                    System.out.println("Price: " + price);
+                    System.out.println("Damage: " + damage);
+                    System.out.println("Bulk: " + bulk);
+                    System.out.println("Hands: " + hands);
+                    System.out.println("Type: " + type);
+                    System.out.println("Category: " + category);
+                    System.out.println("Group: " + group);
+                }     
+                    */           
+                Pattern detailsPattern = Pattern.compile(
+                    "<b>Price</b> (\\d+) (\\w)p; " 
+                    + "<b>Damage</b> ([^ ]+) [^;]+; " 
+                    + "<b>Bulk</b> ([^<]+)<br />" 
+                    + "<b>Hands</b> ([^<;]+);? ?(<br />)?" 
+                    + "(?:<b>Range</b> (\\d+) ft.; )?" 
+                    + "(?:<b>Reload</b> (\\d+)<br />)?" 
+                    + "<b>Type</b> ([^;]+); " 
+                    + "<b>Category</b> ([^;]+); " 
+                    + "<b>Group</b> <u><a href=\"WeaponGroups.aspx\\?ID=\\d+\">([^<]+)</a>"
+                );
+                
+                Matcher detailsMatcher = detailsPattern.matcher(line);
+                if (detailsMatcher.find()) {
+                    String price = detailsMatcher.group(1);
+                    String damage = detailsMatcher.group(3);
+                    String bulk = detailsMatcher.group(4);
+                    String hands = detailsMatcher.group(5);
+                    String range = detailsMatcher.group(7);
+                    String reload = detailsMatcher.group(8);
+                    String type = detailsMatcher.group(9);
+                    String category = detailsMatcher.group(10);
+                    String group = detailsMatcher.group(11);
+                
+                    weapon.setPriceInCopper(Integer.parseInt(price) * (detailsMatcher.group(2).equals("g") ? 100 : detailsMatcher.group(2).equals("s") ? 10 : 1));
+                    weapon.setDamage(damage);
+                    weapon.setBulk(bulk);
+                    weapon.setHands(hands);
+                    weapon.setRange(range);
+                    //weapon.setRange(range != null ? Integer.parseInt(range) : 0);
+                    weapon.setReload(reload);
+                    //weapon.setReload(reload != null ? Integer.parseInt(reload) : 0);
+                    weapon.setType(type);
+                    weapon.setCategory(category);
+                    weapon.setGroup(group);
+
+                    //(detailsMatcher.group(2).equals("g") ? 100 : detailsMatcher.group(2).equals("s") ? 10 : 1)
+                    /*
+                    System.out.println("Price: " + price);
+                    System.out.println("Damage: " + damage);
+                    System.out.println("Bulk: " + bulk);
+                    System.out.println("Hands: " + hands);
+                    System.out.println("Range: " + (range != null ? range : "N/A"));
+                    System.out.println("Reload: " + (reload != null ? reload : "N/A"));
+                    System.out.println("Type: " + type);
+                    System.out.println("Category: " + category);
+                    System.out.println("Group: " + group);
+                    */
+                } else {
+                    //Maybe it's ammunition
+                    Pattern ammunitionPattern = Pattern.compile("<b>Category<\\/b> Ammunition; ");
+                    Matcher ammunitionMatcher = ammunitionPattern.matcher(line);
+                    if (ammunitionMatcher.find()) {
+                        weapon.setCategory("Ammunition");
+
+                        Pattern bulkPattern = Pattern.compile(">Bulk<\\/b> ([^<]+)<");
+                        Matcher bulkMatcher = bulkPattern.matcher(line);
+                        if (bulkMatcher.find()) {
+                            weapon.setBulk(bulkMatcher.group(1));
+                        }
+
+                        Pattern pricePattern = Pattern.compile(">Price<\\/b> (\\d+) (\\w)p (\\(price for (\\d+))");
+                        Matcher priceMatcher = pricePattern.matcher(line);
+                        if (priceMatcher.find()) {
+                            weapon.setPriceInCopper(Integer.parseInt(priceMatcher.group(1)) * (priceMatcher.group(2).equals("g") ? 100 : priceMatcher.group(2).equals("s") ? 10 : 1));
+                            weapon.setPurchaseAmount(Integer.parseInt(priceMatcher.group(4)));
+                        }
+                    }
+                }
+
+                Pattern twoHandedPattern = Pattern.compile(">Two-Hand (\\dd\\d+)<");
+                Matcher twoHandedMatcher = twoHandedPattern.matcher(line);
+                if (twoHandedMatcher.find()) {
+                    //System.out.println("Two-Handed Damage: " + twoHandedMatcher.group(1));
+                    weapon.setTwoHandedDamage(twoHandedMatcher.group(1));
+                }
+
+                Pattern deadlyPattern = Pattern.compile(">Deadly d(\\d+):?<");
+                Matcher deadlyMatcher = deadlyPattern.matcher(line);
+                if (deadlyMatcher.find()) {
+                    //System.out.println("Deadly: " + deadlyMatcher.group(1));
+                    weapon.setDeadlyDice(Integer.parseInt(deadlyMatcher.group(1)));
+                }
             }        
         }
         return weapon;
@@ -640,8 +765,8 @@ public class NethysController {
         while ((line = br.readLine()) != null) {
             if (line.contains("ctl00_RadDrawer1_Content_MainContent_DetailedOutput")) {
             //if (line.contains("Buckle")) {
-                //System.out.println("Line: " + i);
-                //System.out.println(line);
+//                System.out.println("Line: " + i);
+//                System.out.println(line);
 
                 int id2 = 0;
                 String name = null;
@@ -661,6 +786,24 @@ public class NethysController {
                 }
 
                 armor = new Armor(id2, name, description);
+
+                //<b>Price</b> 3 gp; <b>AC Bonus</b> +2; <b>Dex Cap</b> +3; <b>Check Penalty</b> -1; <b>Speed Penalty</b> &mdash;<br /><b>Strength</b> +1; <b>Bulk</b> 1; <b>Category</b> Light; <b>Group</b> <u><a href="ArmorGroups.aspx?ID=3">Leather</a></u>
+
+                Pattern statPattern = Pattern.compile("Price<\\/b> (\\d+) (\\w)p; <b>AC Bonus<\\/b> \\+(\\d+); <b>Dex Cap<\\/b> \\+(\\d+); <b>Check Penalty<\\/b> (&mdash;|\\-(\\d+)); <b>Speed Penalty</b> (&mdash;|\\-(\\d+) ft.)<br \\/><b>Strength<\\/b> (&mdash;|\\+(\\d+)); <b>Bulk<\\/b> (.*?); <b>Category<\\/b> (\\w+); <b>Group<\\/b> <u><a href=\"ArmorGroups.aspx\\?ID=\\d+\">(\\w+)<\\/a>");
+                Matcher statMatcher = statPattern.matcher(line);
+                if (statMatcher.find()) {
+                    armor.setPriceInCopper((statMatcher.group(2).equals("g") ? 100 : statMatcher.group(2).equals("s") ? 10 : 1) * Integer.parseInt(statMatcher.group(1)));
+                    
+                    armor.setAcBonus(Integer.parseInt(statMatcher.group(3)));
+                    armor.setDexCap(Integer.parseInt(statMatcher.group(4)));
+                    armor.setCheckPenalty(statMatcher.group(5).equals("&mdash;") ? 0 : Integer.parseInt(statMatcher.group(6)));
+                    armor.setSpeedPenalty( statMatcher.group(7).equals("&mdash;") ? 0 : Integer.parseInt(statMatcher.group(8)));
+                    armor.setStrength(statMatcher.group(9).equals("&mdash;") ? 0 : Integer.parseInt(statMatcher.group(10)));
+                    armor.setBulk(statMatcher.group(11));
+                    armor.setCategory(statMatcher.group(12)); 
+                    armor.setGroup(statMatcher.group(13)); //TODO: Maybe store the armor group id instead of the name
+                    
+                }
             }
             //System.out.println(line);
         }
@@ -761,6 +904,22 @@ public class NethysController {
                 }
 
                 spell = new Spell(id2, name, description);
+
+                Pattern levelPattern = Pattern.compile("<span style=\"margin-left:auto; margin-right:0\">(Spell|Focus|Cantrip) (\\d+)</span>");
+                Matcher levelMatcher = levelPattern.matcher(line);
+                if (levelMatcher.find()) {
+                    spell.setLevel(Integer.parseInt(levelMatcher.group(2)));
+                }
+
+                Pattern traitPattern = Pattern.compile("<a href=\"\\/Traits.aspx\\?ID=(\\d+)\">(.*?)<\\/a>");
+                Matcher traitMatcher = traitPattern.matcher(line);
+                List<Trait> traits = new ArrayList<>();
+                while (traitMatcher.find()) {
+                    Trait trait = new Trait(Integer.parseInt(traitMatcher.group(1)), traitMatcher.group(2));
+                    traits.add(trait);
+                    //System.out.println("Trait " + traitMatcher.group(1) + " " + traitMatcher.group(2));
+                }
+                spell.setTraits(traits);
             }
         }
 
@@ -802,6 +961,416 @@ public class NethysController {
     private List<Spell> getSpellListInternal(String list, int level) {
         return null;
     }
-}
 
+
+    @GetMapping(path="/ancestries")
+    public List<Ancestry> ancestryList() throws IOException {
+        List<Ancestry> ancestries = new ArrayList<>();
+        
+        URL url = new URL("https://2e.aonprd.com/Ancestries.aspx"); // Replace with the desired URL 
+
+        InputStream is = url.openStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String line;
+        
+        int i = 0;
+
+        while ((line = br.readLine()) != null) {
+            i++;
+
+            if (line.contains("ctl00_RadDrawer1_Content_MainContent_DetailedOutput")) {
+                System.out.println("Line: " + i);
+                System.out.println(line);
+
+                String[] raritySplits = line.split("(Rare|Uncommon) Ancestries");
+                String[] rarities = {"Common", "Uncommon", "Rare"};
+
+                for (int rarityIndex = 0; rarityIndex < rarities.length; rarityIndex++) {
+                    String rarityLine = raritySplits[rarityIndex];
+                    
+                    int id = 0;
+                    String name = null;
+
+                    Pattern pattern2 = Pattern.compile("<a href=\"Ancestries.aspx\\?ID=(\\d+)\">(.*?)<\\/a>");
+                    Matcher matcher2 = pattern2.matcher(rarityLine);
+                    while (matcher2.find()) {
+                        
+                        id = Integer.parseInt(matcher2.group(1));
+                        name = matcher2.group(2);
+                        if (!name.contains("Click")) {
+                            Ancestry ancestry = new Ancestry(name, id);
+                            ancestry.setRarity(rarities[rarityIndex]); //TODO: Find the rarity
+                            ancestries.add(ancestry);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return ancestries;
+    }
+
+    @GetMapping(path="/ancestries/{id}")
+    public Ancestry getAncestry(@PathVariable String id) throws IOException {
+        Ancestry ancestry = null;
+
+        URL url = new URL("https://2e.aonprd.com/Ancestries.aspx?ID=" + id); // Replace with the desired URL
+
+        InputStream is = url.openStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String line;
+
+        int i = 0;
+
+
+        while ((line = br.readLine()) != null) {
+            i++;
+            if (line.contains("ctl00_RadDrawer1_Content_MainContent_DetailedOutput")) {
+                //System.out.println("Line: " + i);
+                //System.out.println(line);
+
+                int id2 = 0;
+                String name = null;
+                String description = null;
+
+                Pattern pattern = Pattern.compile("\\<hr \\/\\>(.*?)\\<\\/span\\>");
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find()) {
+                    description = matcher.group(1);
+                }
+
+                Pattern pattern2 = Pattern.compile("<a href=\"Ancestries.aspx\\?ID=(\\d+)\">(.*?)<\\/a>");
+                Matcher matcher2 = pattern2.matcher(line);
+                if (matcher2.find()) {
+                    id2 = Integer.parseInt(matcher2.group(1));
+                    name = matcher2.group(2);
+                }
+
+                Pattern traitPattern = Pattern.compile("<a href=\"\\/Traits.aspx\\?ID=(\\d+)\">(.*?)<\\/a>");
+                //<a href="/Traits.aspx?ID=627">Human</a>
+                ///><a href="/Traits.aspx?ID=627">Human</a>
+                Matcher traitMatcher = traitPattern.matcher(line);
+                List<Trait> traits = new ArrayList<>();
+                while (traitMatcher.find()) {
+                    System.out.println("Trait");
+                    Trait trait = new Trait(Integer.parseInt(traitMatcher.group(1)), traitMatcher.group(2));
+                    traits.add(trait);
+                }
+                ancestry = new Ancestry(name, id2);
+                //ancestry.setDescription(description);
+                ancestry.setTraits(traits);
+            }
+        }
+
+
+        return ancestry;
+    }
+
+    @GetMapping(path="/heritages/{trait}")
+    public List<Heritage> heritageList(@PathVariable String trait) throws IOException {
+        return getHeritageListInternal(trait);
+    }
+
+    private List<Heritage> getHeritageListInternal(String trait) throws IOException {
+        List<Heritage> heritages = new ArrayList<>();
+
+        URL url = new URL("https://2e.aonprd.com/Heritages.aspx?Ancestry=" + trait); // Replace with the desired URL
+
+        InputStream is = url.openStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String line;
+
+        int i = 0;
+
+        while ((line = br.readLine()) != null) {
+            i++;
+
+            if (line.contains("ctl00_RadDrawer1_Content_MainContent_DetailedOutput")) {
+                System.out.println("Line: " + i);
+                System.out.println(line);
+
+                int id = 0;
+                String name = null;
+
+                Pattern pattern2 = Pattern.compile("<a href=\"Heritages.aspx\\?ID=(\\d+)\">(.*?)<\\/a>");
+                Matcher matcher2 = pattern2.matcher(line);
+                while (matcher2.find()) {
+                    id = Integer.parseInt(matcher2.group(1));
+                    name = matcher2.group(2);
+                    Heritage heritage = new Heritage(id, name);
+                    heritages.add(heritage);
+                }
+            }
+        }
+
+        return heritages;
+    }
+
+    @GetMapping(path="/backgrounds")
+    public List<Background> backgroundList() throws IOException {
+        List<Background> backgrounds = new ArrayList<>();
+
+        URL url = new URL("https://2e.aonprd.com/Backgrounds.aspx"); // Replace with the desired URL
+        url = new URL("https://elasticsearch.aonprd.com/aon/_search?track_total_hits=true");
+
+        /*
+        InputStream is = url.openStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String line;
+*/
+        int i = 0;
+
+
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+
+        // Set request headers, if needed
+        connection.setRequestProperty("Content-Type", "application/json");
+        //connection.setRequestProperty("Authorization", "Bearer <your_token>");
+
+        // Set request body, if needed
+        String requestBody = "{\"key\": \"value\"}";
+
+        //int startLevel = i * 5 + 1;
+        //int endLevel = i * 5 + 5;
+
+        //System.out.println("Start Level: " + startLevel + " End Level: " + endLevel);
+
+        //requestBody = "{'query':{'function_score':{'query':{'bool':{'filter':[{'range':{'level':{'gte':1}}},{'range':{'level':{'lte':5}}},{'query_string':{'query':'category:feat trait:(\'Sorcerer\') NOT trait:kingdom','default_operator':'AND','fields':['name','legacy_name','remaster_name','text^0.1','trait_raw','type'],'minimum_should_match':0}},{'bool':{'must_not':{'exists':{'field':'remaster_id'}}}}],'must_not':[{'term':{'exclude_from_search':true}}]}},'boost_mode':'multiply','functions':[{'filter':{'terms':{'type':['Ancestry','Class','Versatile
+        requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"query_string\":{\"query\":\"category:background is_general_background:true NOT region:* NOT trait:legacy\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":200,\"sort\":[{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"type\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
+
+        connection.setDoOutput(true);
+        OutputStream outputStream = connection.getOutputStream();
+        outputStream.write(requestBody.getBytes());
+        outputStream.flush();
+        outputStream.close();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String line;
+
+        while ((line = br.readLine()) != null) {
+            i++;
+            System.out.println(line);
+
+            //if (line.contains("ctl00_RadDrawer1_Content_MainContent_DetailedOutput")) {
+                //System.out.println("Line: " + i);
+                //System.out.println(line);
+
+                int id = 0;
+                String name = null;
+                String description = null;
+
+                Pattern pattern2 = Pattern.compile("background-(\\d+)\",\"_score\":null,\"sort\":\\[\"([^\"]+)\"");
+                Matcher matcher2 = pattern2.matcher(line);
+                while (matcher2.find()) {
+                    id = Integer.parseInt(matcher2.group(1));
+                    name = matcher2.group(2);
+                    description = "";
+                    Background background = new Background(id, name, description);
+                    backgrounds.add(background);
+                }
+            //}
+        }
+
+        return backgrounds;
+    }
+
+    @GetMapping(path="/backgrounds/{id}")
+    public Background background(@PathVariable int id) throws IOException {
+        Background background = new Background();
+
+        URL url = new URL("https://2e.aonprd.com/Backgrounds.aspx?ID=" + id); // Replace with the desired URL
+
+        InputStream is = url.openStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String line;
+
+        int i = 0;
+
+        while ((line = br.readLine()) != null) {
+            i++;
+            if (line.contains("ctl00_RadDrawer1_Content_MainContent_DetailedOutput")) {
+                System.out.println("Line: " + i);
+                System.out.println(line);
+
+                int id2 = 0;
+                String name = null;
+                String description = null;
+
+                Pattern pattern2 = Pattern.compile("\\<hr \\/\\>(.*?)\\<h2");
+                Matcher matcher2 = pattern2.matcher(line);
+                if (matcher2.find()) {
+                    description = matcher2.group(1);
+                }
+
+                Pattern pattern3 = Pattern.compile("<a href=\"Backgrounds.aspx\\?ID=(\\d+)\">(.*?)<\\/a>");
+                Matcher matcher3 = pattern3.matcher(line);
+                if (matcher3.find()) {
+                    id2 = Integer.parseInt(matcher3.group(1));
+                    name = matcher3.group(2);
+                }
+
+                background = new Background(id2, name, description);
+            }
+        }
+
+        return background;
+    }
+
+    @GetMapping(path="/classes/{id}")
+    public CharacterClassLong classInfo(@PathVariable int id) throws IOException {
+        CharacterClassLong classInfo = null;
+
+        //https://2e.aonprd.com/Classes.aspx?ID=32
+
+        URL url = new URL("https://2e.aonprd.com/Classes.aspx?ID=" + id); // Replace with the desired URL
+
+        InputStream is = url.openStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String line;
+
+        int i = 0;
+
+
+        while ((line = br.readLine()) != null) {
+            i++;
+            if (line.contains("ctl00_RadDrawer1_Content_MainContent_DetailedOutput")) {
+                System.out.println("Line: " + i);
+                System.out.println(line);
+
+                int id2 = 0;
+                String name = null;
+                String description = null;
+
+                Pattern pattern = Pattern.compile("\\<hr \\/\\>(.*?)\\<\\/span\\>");
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find()) {
+                    description = matcher.group(1);
+                }
+
+                Pattern pattern2 = Pattern.compile("<a href=\"Classes.aspx\\?ID=(\\d+)\">(.*?)<\\/a>");
+                Matcher matcher2 = pattern2.matcher(line);
+                if (matcher2.find()) {
+                    id2 = Integer.parseInt(matcher2.group(1));
+                    name = matcher2.group(2);
+                }
+
+                Pattern hpPattern = Pattern.compile("<b>Hit Points: (\\d+)");
+                Matcher hpMatcher = hpPattern.matcher(line);
+                int hpPerLevel = 0;
+                if (hpMatcher.find()) {
+                    hpPerLevel = (Integer.parseInt(hpMatcher.group(1)));
+                }
+
+                classInfo = new CharacterClassLong(id2, name, description, hpPerLevel);
+            }
+        }
+
+        classInfo.setId(id);
+
+        return classInfo;
+    }
+
+    @GetMapping(path="/spells")
+    public List<Spell> spellList(@RequestParam(required = false) String tradition, @RequestParam(required = false) List<String> Trait, @RequestParam(required = false) Integer level) throws IOException {
+        if (Trait != null) {
+            for (String trait : Trait) {
+                System.out.println("Trait: " + trait);
+            }
+        }
+        if (level != null) {
+            System.out.println("Level: " + level);
+        }
+
+        List<Spell> spells = new ArrayList<>();
+        if (tradition != null) {
+            System.out.println("Tradition: " + tradition);
+        }
+
+        //requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"term\":{\"trait\":{\"value\":\"cantrip\"}}},{\"query_string\":{\"query\":\"category:spell tradition: " + tradition + "\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":100,\"sort\":[{\"spell_type\":{\"order\":\"asc\"}},{\"rank\":{\"order\":\"asc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}}],\"size\":10000}},\"group2\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}},{\"field2\":{\"terms\":{\"field\":\"rank\",\"missing_bucket\":true}}}],\"size\":10000}}}}");
+
+        URL url = new URL("https://2e.aonprd.com/Backgrounds.aspx"); // Replace with the desired URL
+        url = new URL("https://elasticsearch.aonprd.com/aon/_search?track_total_hits=true");
+
+        int i = 0;
+
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+
+        // Set request headers, if needed
+        connection.setRequestProperty("Content-Type", "application/json");
+
+        // Set request body, if needed
+        String requestBody = "{\"key\": \"value\"}";
+
+        int intLevel = level != null ? level : 0;
+
+        //requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"query_string\":{\"query\":\"category:background is_general_background:true NOT region:* NOT trait:legacy\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":200,\"sort\":[{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"type\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
+        if (tradition != null) {
+            if (Trait != null && Trait.contains("Cantrip")) {
+                requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"term\":{\"trait\":{\"value\":\"cantrip\"}}},{\"query_string\":{\"query\":\"category:spell tradition: " + tradition + "\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":100,\"sort\":[{\"spell_type\":{\"order\":\"asc\"}},{\"rank\":{\"order\":\"asc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}}],\"size\":10000}},\"group2\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}},{\"field2\":{\"terms\":{\"field\":\"rank\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
+            } else {
+                requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"range\":{\"level\":{\"gte\":" + intLevel + "}}},{\"range\":{\"level\":{\"lte\":" + intLevel + "}}},{\"query_string\":{\"query\":\"category:spell tradition: " + tradition + "\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"terms\":{\"trait\":[\"cantrip\"]}},{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":100,\"sort\":[{\"spell_type\":{\"order\":\"asc\"}},{\"rank\":{\"order\":\"asc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}}],\"size\":10000}},\"group2\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}},{\"field2\":{\"terms\":{\"field\":\"rank\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
+            }
+        } else {
+            //String trait = Trait != null && Trait.size() > 0 ? Trait.get(0) : "cantrip";
+
+            String traitsStrings = ""; 
+
+            if (Trait != null) {
+                for (String oneTrait: Trait) {
+                    traitsStrings += "{\"term\":{\"trait\":{\"value\":\"" + oneTrait + "\"}}},";
+                }
+            }
+            //{"filter":[{"term":{"trait":{"value":"bard"}}},{"term":{"trait":{"value":"focus"}}},
+            
+            requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[" + traitsStrings + "{\"query_string\":{\"query\":\"category:spell \",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":50,\"sort\":[{\"spell_type\":{\"order\":\"asc\"}},{\"rank\":{\"order\":\"asc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}}],\"size\":10000}},\"group2\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}},{\"field2\":{\"terms\":{\"field\":\"rank\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
+
+            //requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"term\":{\"trait\":{\"value\":\"" + trait + "\"}}},{\"query_string\":{\"query\":\"category:spell \",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":50,\"sort\":[{\"spell_type\":{\"order\":\"asc\"}},{\"rank\":{\"order\":\"asc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"aggs\":{\"group1\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}}],\"size\":10000}},\"group2\":{\"composite\":{\"sources\":[{\"field1\":{\"terms\":{\"field\":\"spell_type\",\"missing_bucket\":true}}},{\"field2\":{\"terms\":{\"field\":\"rank\",\"missing_bucket\":true}}}],\"size\":10000}}}}";
+        }
+        //requestBody = "{\"query\":{\"function_score\":{\"query\":{\"bool\":{\"filter\":[{\"range\":{\"level\":{\"gte\":1}}},{\"range\":{\"level\":{\"lte\":1}}},{\"query_string\":{\"query\":\"category:spell tradition: Occult\",\"default_operator\":\"AND\",\"fields\":[\"name\",\"legacy_name\",\"remaster_name\",\"text^0.1\",\"trait_raw\",\"type\"],\"minimum_should_match\":0}},{\"bool\":{\"must_not\":{\"exists\":{\"field\":\"remaster_id\"}}}}],\"must_not\":[{\"terms\":{\"trait\":[\"cantrip\"]}},{\"exists\":{\"field\":\"item_child_id\"}},{\"term\":{\"exclude_from_search\":true}}]}},\"boost_mode\":\"multiply\",\"functions\":[{\"filter\":{\"terms\":{\"type\":[\"Ancestry\",\"Class\",\"Versatile Heritage\"]}},\"weight\":1.2},{\"filter\":{\"terms\":{\"type\":[\"Trait\"]}},\"weight\":1.05}]}},\"size\":10000,\"sort\":[{\"spell_type\":{\"order\":\"asc\"}},{\"rank\":{\"order\":\"asc\"}},{\"name.keyword\":{\"order\":\"asc\"}},\"_doc\"],\"track_total_hits\":true,\"_source\":false,\"search_after\":[\"spell\",1,\"mindlink\",27340]}";
+
+
+        connection.setDoOutput(true);
+        OutputStream outputStream = connection.getOutputStream();
+        outputStream.write(requestBody.getBytes());
+        outputStream.flush();
+        outputStream.close();
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String line;
+
+
+        while ((line = br.readLine()) != null) {
+            i++;
+            System.out.println(line);
+
+            //if (line.contains("ctl00_RadDrawer1_Content_MainContent_DetailedOutput")) {
+                //System.out.println("Line: " + i);
+                //System.out.println(line);
+
+                int id = 0;
+                String name = null;
+                String description = null;
+
+                Pattern pattern2 = Pattern.compile("spell-(\\d+)\",\"_score\":null,\"sort\":\\[\"([^\"]+)\",(\\d+),\"([^\"]+)\"");
+                Matcher matcher2 = pattern2.matcher(line);
+                while (matcher2.find()) {
+                    id = Integer.parseInt(matcher2.group(1));
+                    name = matcher2.group(4);
+                    Spell spell = new Spell();
+                    spell.setId(id);
+                    spell.setName(name);
+                    spell.setTradition(tradition);
+                    spell.setLevel(Integer.parseInt(matcher2.group(3)));
+                    spells.add(spell);                    
+                }
+            //}
+            
+
+        }
+
+        return spells;
+    }
+}
 
