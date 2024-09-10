@@ -18,6 +18,20 @@ public class PfCharacter {
 
     private BasicInfo basicInfo;
 
+    private String basicInfoId;
+
+    private String castingIdString;
+
+    // Getter for BasicInfoId
+    public String getBasicInfoId() {
+        return basicInfoId;
+    }
+
+    // Setter for BasicInfoId
+    public void setBasicInfoId(String basicInfoId) {
+        this.basicInfoId = basicInfoId;
+    }
+
     public String getImage() {
         return image;
     }
@@ -81,5 +95,13 @@ public class PfCharacter {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getCastingIdString() {
+        return castingIdString;
+    }
+
+    public void setCastingIdString(String castingIdString) {
+        this.castingIdString = castingIdString;
     }
 }

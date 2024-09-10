@@ -1,5 +1,7 @@
 package com.myapp.root.controllers;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,11 +12,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.myapp.root.data.BasicInfo;
+import com.myapp.root.data.Casting;
 import com.myapp.root.data.PfCharacter;
 import com.myapp.root.data.PfUser;
+import com.myapp.root.data.equipment.Gear;
+import com.myapp.root.data.equipment.GearCompact;
+import com.myapp.root.repositories.BasicInfoRepository;
+import com.myapp.root.repositories.CastingsRepository;
 import com.myapp.root.repositories.PfCharacterRepository;
 import com.myapp.root.repositories.PfUserRepository;
 
@@ -26,8 +34,16 @@ public class PfCharacterController {
     PfCharacterRepository pfCharacterRepository;
     
     @Autowired
-    PfUserRepository pfUserRepository;   
+    PfUserRepository pfUserRepository;
 
+    @Autowired
+    BasicInfoRepository basicInfoRepository;   
+
+    @Autowired
+    NethysController nethysController;
+
+    @Autowired
+    CastingsRepository castingsRepository;
     /*
     @GetMapping(path="/save")
     public boolean save() {
@@ -48,9 +64,26 @@ public class PfCharacterController {
     */
 
     @GetMapping(path="")
-    public List<PfCharacter> loadAll() {
- 
-        List<PfCharacter> value = pfCharacterRepository.findAll();
+    public List<PfCharacter> loadAll(@RequestParam Optional<String> user) {
+        //TODO: The findAll() shouldn't be visible for all
+        List<PfCharacter> value = user.isPresent() ? 
+            loadByUser(user.get()) : 
+            pfCharacterRepository.findAll();
+
+        BasicInfo basicInfo = new BasicInfo();
+
+        basicInfo.setLevel(1);
+        basicInfo.setFort(5);
+        basicInfo.setWill(4);
+        basicInfo.setRef(6);
+        basicInfo.setAC(17);
+        basicInfo.setHP(14);
+        basicInfo.setRace("elf");
+        basicInfo.setGender("Female");
+        basicInfo.setCharClass("sorcerer");
+
+
+        value.forEach(pfchar -> pfchar.setBasicInfo(basicInfo));
 
         return value;
     }
@@ -84,7 +117,11 @@ public class PfCharacterController {
 
         //return  pfCharacterRepository.save(testChar);
 
-        pfCharacter.setName("Changed name");
+        if (pfCharacter.getId() == "") {
+            pfCharacter.setId(null);
+        }
+
+        pfCharacterRepository.save(pfCharacter);
 
         return pfCharacter;
     }
@@ -131,8 +168,98 @@ public class PfCharacterController {
     }
 
     @PutMapping("/basicinfo/{id}")
-    public BasicInfo updateBasicInfo(@RequestBody BasicInfo basicInfo, @PathVariable String id) {
-        return basicInfo;
+    public BasicInfo updateBasicInfo(@RequestBody BasicInfo basicInfo, @PathVariable String id) throws IOException {
+        System.out.println(basicInfo.getAC());
+        System.out.println(basicInfo.getCharClass());
+        System.out.println(basicInfo.getFort());
+        System.out.println(basicInfo.getGender());
+        System.out.println(basicInfo.getHP());
+        System.out.println(basicInfo.getLevel());
+        System.out.println(basicInfo.getRace());
+        System.out.println(basicInfo.getRef());
+        System.out.println(basicInfo.getWill());
+
+        List<Gear> gearList = nethysController.gearList("adsf");
+
+
+        if (basicInfo.getGear() != null) {
+            if (basicInfo.getGearCompact() == null) {
+                basicInfo.setGearCompact(new ArrayList<>());
+            }
+
+            for (int i = 0; i < basicInfo.getGear().size(); i++) {
+                boolean found = false;
+
+                for (int j = 0; j < basicInfo.getGearCompact().size(); j++) {
+                    if (basicInfo.getGearCompact().get(j).getId() == Integer.parseInt(basicInfo.getGear().get(i))) {
+                        found = true;
+                    }
+                }
+
+                if (!found) {
+                    GearCompact gearCompact = new GearCompact();
+
+                    gearCompact.setId(Integer.parseInt(basicInfo.getGear().get(i)));
+
+                    for (Gear gear : gearList) {
+                        if (gear.getId() == gearCompact.getId()) {
+                            gearCompact.setName(gear.getName());
+                            gearCompact.setSubId(gear.getSubId());
+                        }
+                    }                    
+
+                    basicInfo.getGearCompact().add(gearCompact);
+                }
+            }
+        }
+
+        BasicInfo savedInfo = basicInfoRepository.save(basicInfo);
+
+        return savedInfo;
+    }
+
+    @GetMapping(path="/basicinfo/{id}")
+    public BasicInfo loadBasicInfo(@PathVariable String id) {
+ 
+        Optional<BasicInfo> value = basicInfoRepository.findById(id);
+
+        if (value.isPresent()) {
+            if (value.get().getFeats() == null) {
+                value.get().setFeats(new ArrayList<String>());
+            }
+            return value.get();
+        }
+
+        /* How do we return correct HTML error? */
+        return null;
+    }
+
+    @GetMapping(path="/castings/{id}")
+    public Casting loadCasting(@PathVariable String id) {
+        Optional<Casting> value = castingsRepository.findById(id);
+
+        if (value.isPresent()) {
+            return value.get();
+        }
+
+        return null;
+    }
+
+    @PostMapping(path="/castings")
+    public Casting saveCasting(@RequestBody Casting casting) {
+        System.out.println("########## name " + casting.getClassName());
+
+        Casting value = castingsRepository.save(casting);
+
+        System.out.println("########## id " + value.getId());
+
+        return value;
+    }
+
+    @PutMapping(path="/castings/{id}")
+    public Casting updateCasting(@RequestBody Casting casting, @PathVariable String id) {
+        Casting value = castingsRepository.save(casting);
+        return value;
     }
 }
 
